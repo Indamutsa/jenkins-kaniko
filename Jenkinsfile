@@ -18,7 +18,7 @@ spec:
       - -c
       - |
         apk add --no-cache curl
-        curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl" 
+        curl -LO "https://s3.us-west-2.amazonaws.com/amazon-eks/1.25.6/2023-01-30/bin/linux/amd64/kubectl" 
         chmod +x kubectl
         mv kubectl /usr/local/bin/
         kubectl version --client
