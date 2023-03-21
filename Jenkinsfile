@@ -45,7 +45,7 @@ pipeline {
     agent {
         kubernetes {
             yaml podTemplate
-            instanceCap 3
+            instanceCap 6
             defaultContainer 'jenkins-slave'
         }
     }
