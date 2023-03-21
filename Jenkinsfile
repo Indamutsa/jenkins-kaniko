@@ -34,15 +34,11 @@ spec:
 """
 
 pipeline {
-    options {
-         maskVars('')
-    }
-
     agent {
         kubernetes {
             yaml podTemplate
             instanceCap 6
-            defaultContainer 'jenkins-slave'
+            // defaultContainer 'jenkins-slave'
         }
     }
 
