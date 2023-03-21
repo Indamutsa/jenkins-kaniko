@@ -19,7 +19,7 @@ spec:
       - |
         apk add --no-cache curl
         curl -O https://s3.us-west-2.amazonaws.com/amazon-eks/1.25.6/2023-01-30/bin/darwin/amd64/kubectl
-amd64/kubectl" 
+amd64/kubectl
         chmod +x kubectl
         mv kubectl /usr/local/bin/
         kubectl version --short --client
