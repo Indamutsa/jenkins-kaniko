@@ -12,7 +12,7 @@ spec:
     args:
     - infinity
   - name: kubectl
-    image: alpine/k8s
+    image: alpine/k8s:1.24.12
     command:
       - /bin/sh
     tty: true
