@@ -1,3 +1,5 @@
+// This is working example of Jenkinsfile for building and deploying Docker image to Kubernetes using Kaniko
+
 def podTemplate = """
 apiVersion: v1
 kind: Pod
@@ -15,7 +17,7 @@ spec:
     - /bin/cat
     tty: true    
   - name: kaniko
-    image: gcr.io/kaniko-project/executor:debug
+    image: gcr.io/kaniko-project/executor:latest
     command:
     - /busybox/cat
     tty: true
