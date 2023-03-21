@@ -75,6 +75,8 @@ pipeline {
                     // }
               withKubeConfig([credentialsId: 'mykubeconfig', serverUrl: 'https://kubernetes.default:443']) {
                 sh 'kubectl version --client --short'
+                sh 'sed -i "s/<TAG>/${BUILD_NUMBER}/" myweb.yaml'
+                sh 'kubectl apply -f myweb.yaml'
               }
           }
       }
