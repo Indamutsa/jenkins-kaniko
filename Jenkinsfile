@@ -11,11 +11,7 @@ spec:
     - sleep
     args:
     - infinity
-  - name: kubectl
-    image: bitnami/kubectl
-    command:
-      - /bin/sh
-    tty: true
+
   - name: kaniko
     image: gcr.io/kaniko-project/executor:debug
     command:
@@ -66,12 +62,9 @@ pipeline {
         }
 
         stage('Deploy App to Kubernetes') {
-            steps {
-                container('kubectl') {
-                    withCredentials([file(credentialsId: 'mykubeconfig', variable: 'KUBECONFIG')]) {
-                        sh 'sed -i "s/<TAG>/${BUILD_NUMBER}/" myweb.yaml'
-                        sh 'kubectl apply -f myweb.yaml'
-                    }
+             steps {
+                kubernetes {
+                    sh "kubectl get pods"
                 }
             }
         }
