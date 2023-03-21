@@ -12,7 +12,7 @@ spec:
     args:
     - infinity
   - name: kubectl
-    image: bitnami/kubectl:latest
+    image: alpine:latest
     command:
       - /bin/sh
       - -c
