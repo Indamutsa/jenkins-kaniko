@@ -14,19 +14,8 @@ spec:
   - name: kubectl
     image: bitnami/kubectl:latest
     command:
-    - sh
-    - -c
-    - |
-      while true; do
-        echo "Waiting for Kubernetes API server to be available..."
-        if kubectl --request-timeout=10s get pods &> /dev/null; then
-          echo "Kubernetes API server is available"
-          break
-        fi
-        sleep 5
-      done
-      exec sleep infinity
-    tty: true 
+    - /bin/cat
+    tty: true   
   - name: kaniko
     image: gcr.io/kaniko-project/executor:debug
     command:
