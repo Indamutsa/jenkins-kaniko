@@ -11,7 +11,7 @@ metadata:
   labels:
     app: myweb
   name: myweb
-  namespace: pipeline-demo
+  namespace: jenkins
 spec:
   replicas: 1
   selector:
@@ -23,9 +23,9 @@ spec:
         app: myweb
     spec:
       containers:
-      - image: justmeandopensource/myweb:<TAG>
-        imagePullPolicy: Always
-        name: myweb
+        - image: indamutsa/myweb:<TAG>
+          imagePullPolicy: Always
+          name: myweb
 
 ---
 apiVersion: v1
@@ -34,13 +34,13 @@ metadata:
   labels:
     app: myweb
   name: myweb
-  namespace: pipeline-demo
+  namespace: jenkins
 spec:
   ports:
-  - nodePort: 32223
-    port: 80
-    protocol: TCP
-    targetPort: 80
+    - nodePort: 32223
+      port: 80
+      protocol: TCP
+      targetPort: 80
   selector:
     app: myweb
   type: NodePort

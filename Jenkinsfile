@@ -1,57 +1,81 @@
+def podTemplate = """
+apiVersion: v1
+kind: Pod
+spec:
+  containers:
+  - name: jenkins-slave
+    image: jenkinsci/slave
+    command:
+    - sleep
+    args:
+    - infinity
+  - name: kubectl
+    image: joshendriks/alpine-k8s
+    command:
+    - /bin/cat
+    tty: true    
+  - name: kaniko
+    image: gcr.io/kaniko-project/executor:debug
+    command:
+    - /busybox/cat
+    tty: true
+    volumeMounts:
+      - name: kaniko-secret
+        mountPath: /kaniko/.docker
+  volumes:
+    - name: kaniko-secret
+      secret:
+        secretName: regcred
+        items:
+          - key: .dockerconfigjson
+            path: config.json
+"""
+
 pipeline {
+    options {
+        ansiColor('xterm')
+    }
+
     agent {
         kubernetes {
-            yamlFile './kubernetes-pod-template.yaml'
+            yaml podTemplate
+            instanceCap 3
+            defaultContainer 'jenkins-slave'
         }
     }
+
     stages {
-        stage('Build') {
+        stage('Deploy') {
             steps {
-                sh 'echo "Hello, Kubernetes!"'
+                container('jenkins-slave') {
+                    sh "echo hello world"
+                }
+            }
+        }
+
+        stage('Kaniko Build & Push Image') {
+            steps {
+                container('kaniko') {
+                    script {
+                        sh '''
+                            /kaniko/executor --dockerfile `pwd`/Dockerfile \
+                                             --context `pwd` \
+                                             --destination=justmeandopensource/myweb:${BUILD_NUMBER}
+                        '''
+                    }
+                }
+            }
+        }
+
+        stage('Deploy App to Kubernetes') {
+            steps {
+                container('kubectl') {
+                    withCredentials([file(credentialsId: 'mykubeconfig', variable: 'KUBECONFIG')]) {
+                        sh 'sed -i "s/<TAG>/${BUILD_NUMBER}/" myweb.yaml'
+                        sh 'kubectl apply -f myweb.yaml'
+                    }
+                }
             }
         }
     }
 }
-
-
-// pipeline {
-
-//   options {
-//     ansiColor('xterm')
-//   }
-
-//   agent {
-//     kubernetes {
-//       yamlFile 'builder.yaml'
-//     }
-//   }
-
-//   stages {
-
-//     stage('Kaniko Build & Push Image') {
-//       steps {
-//         container('kaniko') {
-//           script {
-//             sh '''
-//             /kaniko/executor --dockerfile `pwd`/Dockerfile \
-//                              --context `pwd` \
-//                              --destination=justmeandopensource/myweb:${BUILD_NUMBER}
-//             '''
-//           }
-//         }
-//       }
-//     }
-
-//     stage('Deploy App to Kubernetes') {     
-//       steps {
-//         container('kubectl') {
-//           withCredentials([file(credentialsId: 'mykubeconfig', variable: 'KUBECONFIG')]) {
-//             sh 'sed -i "s/<TAG>/${BUILD_NUMBER}/" myweb.yaml'
-//             sh 'kubectl apply -f myweb.yaml'
-//           }
-//         }
-//       }
-//     }
-  
-//   }
-// }
