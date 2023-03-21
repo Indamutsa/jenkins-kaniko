@@ -66,17 +66,17 @@ pipeline {
         }
 
         stage('Deploy App to Kubernetes') {
-          withKubeConfig([credentialsId: 'mykubeconfig', serverUrl: 'https://kubernetes.default:443']) {
+          steps {
+            withKubeConfig([credentialsId: 'mykubeconfig', serverUrl: 'https://kubernetes.default:443']) {
               sh 'kubectl version --client --short'
             }
-            // steps {
-            //     container('kubectl') {
-            //         withCredentials([file(credentialsId: 'mykubeconfig', variable: 'KUBECONFIG')]) {
-            //             sh 'sed -i "s/<TAG>/${BUILD_NUMBER}/" myweb.yaml'
-            //             sh 'kubectl apply -f myweb.yaml'
-            //         }
-            //     }
-            // }
+                // container('kubectl') {
+                //     withCredentials([file(credentialsId: 'mykubeconfig', variable: 'KUBECONFIG')]) {
+                //         sh 'sed -i "s/<TAG>/${BUILD_NUMBER}/" myweb.yaml'
+                //         sh 'kubectl apply -f myweb.yaml'
+                //     }
+                // }
+            }
         }
     }
 }
