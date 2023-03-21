@@ -11,7 +11,11 @@ spec:
     - sleep
     args:
     - infinity
-
+  - name: kubectl
+    image: alpine/k8s
+    command:
+      - /bin/sh
+    tty: true
   - name: kaniko
     image: gcr.io/kaniko-project/executor:debug
     command:
@@ -63,20 +67,13 @@ pipeline {
 
         stage('Deploy App to Kubernetes') {
             steps {
-                kubernetes {
+                container('kubectl') {
+                    withCredentials([file(credentialsId: 'mykubeconfig', variable: 'KUBECONFIG')]) {
                         sh 'sed -i "s/<TAG>/${BUILD_NUMBER}/" myweb.yaml'
                         sh 'kubectl apply -f myweb.yaml'
+                    }
                 }
             }
         }
     }
 }
-
-
-// stage('Deploy App to Kubernetes') {
-//      steps {
-//         kubernetes {
-//             sh "kubectl get ns"
-//         }
-//     }
-// }
