@@ -35,9 +35,9 @@ spec:
 
 pipeline {
     options {
-        maskPasswords(false)
+         maskVars('')
     }
-    
+
     agent {
         kubernetes {
             yaml podTemplate
