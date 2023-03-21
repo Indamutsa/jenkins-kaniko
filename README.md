@@ -1,27 +1,23 @@
-This command create jennkins as a docker container \
-`docker run --rm -d -u root -p 8080:8080 --name jenkins -v jenkins-data:/var/jenkins_home -v $(which docker):/usr/bin/docker -v /var/run/docker.sock:/var/run/docker.sock -v "$HOME":/home jenkins/jenkins:lts`
+# Running Jenkins inside of kubernetes: ADVANCED WAY
 
-This command create kubernetes using kind, with a worker node and api server address \
+Let us create a cluster with kind utility \
+`kind create cluster --name jenkins`
 
-```
-kind create cluster --name jenkins --config <(cat <<EOF
-kind: Cluster
-apiVersion: kind.x-k8s.io/v1alpha4
-networking:
-apiServerAddress: "192.168.0.19" # replace with your API server IP address
-apiServerPort: 8443
-nodes:
-- role: control-plane
-- role: worker
-EOF
-)
-```
+Let us create a namespace for jenkins \
+`kubectl create namespace jenkins`
 
----
+Install jenkins using local-jenkins folder \
+`kubectl apply -f local-jenkins/`
 
-Next we create a jenkins credentils using a secret a file where we choose config from .kube/config file
+Inside here we install:
 
-Let us make a docker secret to be able to pull images from docker hub
+- The persistence volumes
+- The persistence volume claims
+- The jenkins deployment
+- The jenkins service
+- Jenkins role based access control, which has a service account, role and role binding
+
+After that we create a secret for docker registry \
 
 ```
 kubectl create secret docker-registry regcred -n jenkins \
@@ -31,105 +27,78 @@ kubectl create secret docker-registry regcred -n jenkins \
   --docker-email=arsichizy@gmail.com
 ```
 
-Have the logs live in the console
+Let us expose the jenkins service to be able to access it from browser by port forwarding \
+`kubectl port-forward service/jenkins 8080:8080 --namespace jenkins`
 
-```
-k logs pod/jenkins-0  -n jenkins --follow
-```
-
----
-
-HOW TO INSTALL JENKINS IN KUBERNETES USING HELM
-
-```
-helm repo add jenkinsci https://charts.jenkins.io
-helm repo update
-helm install jenkins --namespace jenkins --create-namespace jenkinsci/jenkins
-```
-
-How to install jenkins in Kubernetes using helm:
-
-```
-mkdir jenkins
-cd jenkins
-helm repo add jenkinsci https://charts.jenkins.io
-
-helm repo update
-gh repo view jenkinsci/helm-charts --web
-```
-
-Port fortward jenkins service to access it from browser
-
-```
-kubectl port-forward service/jenkins 8080:8080 --namespace jenkins
-```
-
-Access jenkins from browser
-
+Access jenkins from browser \
 `http://localhost:8080`
 
-Get admin password
+Get the jenkins pod name \
+`kubectl get pods -n jenkins`
 
-```
-kubectl get secret --namespace jenkins jenkins -o jsonpath="{.data.jenkins-admin-password}" | base64 --decode; echo
-```
+Get admin password \
+`kubectl exec -it jenkins-pod-name -n jenkins -- cat /var/jenkins_home/secrets/initialAdminPassword`
 
-The username is admin and the password is the one you got from the previous command.
+Once inside:
 
-You can also get the secret and then extract the password from it:
+- Install suggested plugins
+- Create admin user and fill the form
+- Click on `Start using Jenkins`
 
-```
-kubectl get secret --namespace jenkins jenkins -o yaml
-```
+## Install kubernetes plugin
 
-Get the password from the output of the previous command and then decode it:
+1. Head to Manage Jenkins > Manage Plugins > Available
+2. Search for `Kubernetes`
+3. Install `Kubernetes plugin`
+4. Head to Manage Jenkins > Configure System
+5. Scroll down to `Cloud` section
+6. Click on `Add a new cloud` > `Kubernetes`
+7. Click on details and fill the form
 
-```
-echo <password> | base64 --decode
-```
+- Name: `kubernetes`
+- Kubernetes URL: `https://kubernetes.default:443` or `https://kubernetes.default.svc.cluster.local`
+- Kubernetes Namespace: `jenkins`
+- Jenkins URL: `http://jenkins:8080`
+- Jenkins Tunnel: `jenkins:50000`
+- Disable SSL verification: `checked`
+- Add authorization using a service account
 
-Let us download the values file for jenkins
+8. Click on `Test Connection` and make sure it is successful
 
-```
-helm show values jenkinsci/jenkins > values.yaml
-```
+## Install blue ocean plugin
 
-I added the following to the values.yaml file
+Go back and install blue ocean plugin \
+`Manage Jenkins > Manage Plugins > Available > Search for blue ocean > Install`
 
-```
-  installPlugins:
-    - kubernetes:3734.v562b_b_a_627ea_c
-    - workflow-aggregator:590.v6a_d052e5a_a_b_5
-    - git:4.13.0
-    - configuration-as-code:1569.vb_72405b_80249
-    - blueocean:1.27.3
-    - ansicolor:1.0.2
+## Create kubeconfig secret
 
-```
+1. System configuration > Global credentials > Add credentials
+2. Kind: `Secret file`
+3. Scope: `Global, Jenkins, and so on`
+4. Secret file: `~/.kube/config`
+5. ID: `kubeconfig`
+6. Description: `kubeconfig`
+7. Click on `OK`
 
-I also uncommented random password generation to disable and i set it by my own!
+## Create a pipeline
 
-And then we run it this way
+1. Click on `New Item`
+2. Enter an item name: `pipeline`
+3. Select `Pipeline`
+4. Click on `OK`
+5. Scroll down to `Pipeline` section
+6. Select `Pipeline script from SCM`
+7. Select `Git`
+8. Repository URL: `https://github.com/Indamutsa/jenkins-kaniko.git`
 
-```
-helm repo add jenkinsci https://charts.jenkins.io
-helm repo update
-helm install jenkins --values values.yaml --namespace jenkins --create-namespace jenkinsci/jenkins
+Make sure the branch is set to `*/master` and jenkinsfile is set to `Jenkinsfile` at the first level in the folder.
 
-```
+9. Click on `Save`
 
-Output
+## Run the pipeline
 
-```
-1. Get your 'arsene' user password by running:
-  kubectl exec --namespace jenkins -it svc/jenkins -c jenkins -- /bin/cat /run/secrets/additional/chart-admin-password && echo
-2. Get the Jenkins URL to visit by running these commands in the same shell:
-  echo http://127.0.0.1:8080
-  kubectl --namespace jenkins port-forward svc/jenkins 8080:8080
-```
+1. Click on `Build Now`
+2. Click on build `#1`
+3. Click on `Console Output` to see the logs
 
-Uninstall:
-
-```
-helm uninstall jenkins --namespace jenkins
-```
+In the meantime build executor is running, we can see the logs in the console. We can set the number of executors in the jenkins dashboard as well.
