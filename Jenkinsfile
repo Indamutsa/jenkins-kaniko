@@ -32,9 +32,6 @@ spec:
 """
 
 pipeline {
-    options {
-        ansiColor('xterm')
-    }
 
     agent {
         kubernetes {
