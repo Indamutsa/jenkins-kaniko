@@ -62,11 +62,21 @@ pipeline {
         }
 
         stage('Deploy App to Kubernetes') {
-             steps {
+            steps {
                 kubernetes {
-                    sh "kubectl get ns"
+                        sh 'sed -i "s/<TAG>/${BUILD_NUMBER}/" myweb.yaml'
+                        sh 'kubectl apply -f myweb.yaml'
                 }
             }
         }
     }
 }
+
+
+// stage('Deploy App to Kubernetes') {
+//      steps {
+//         kubernetes {
+//             sh "kubectl get ns"
+//         }
+//     }
+// }
