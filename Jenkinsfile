@@ -64,7 +64,7 @@ pipeline {
         stage('Deploy App to Kubernetes') {
              steps {
                 kubernetes {
-                    sh "kubectl get pods"
+                    sh "kubectl get ns"
                 }
             }
         }
