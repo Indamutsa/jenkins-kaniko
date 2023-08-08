@@ -26,9 +26,9 @@ Let us make a docker secret to be able to pull images from docker hub
 ```
 kubectl create secret docker-registry regcred -n jenkins \
   --docker-server=https://index.docker.io/v1/ \
-  --docker-username=indamutsa \
-  --docker-password=arsene \
-  --docker-email=arsichizy@gmail.com
+  --docker-username=**** \
+  --docker-password=**** \
+  --docker-email=******
 ```
 
 Have the logs live in the console
