@@ -22,9 +22,9 @@ After that we create a secret for docker registry \
 ```
 kubectl create secret docker-registry regcred -n jenkins \
   --docker-server=https://index.docker.io/v1/ \
-  --docker-username=indamutsa \
-  --docker-password=arsene \
-  --docker-email=arsichizy@gmail.com
+  --docker-username=****** \
+  --docker-password=****** \
+  --docker-email=***********
 ```
 
 Let us expose the jenkins service to be able to access it from browser by port forwarding \
